@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="4bec974b-deb5-4de6-82b5-3afd7bd636bc" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="bcdde62a-4fd2-4c37-ac83-2a6d5146e2e7" />
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="071cc787-0211-4765-8b90-2cd9f85d2113" >
+		<email:smtp-connection host="smtp.gmail.com" user="rajasekhar7739@gmail.com" password="dnyrwicgwxkqoxnl" port="587">
+			<email:properties >
+				<email:property key="mail.smtp.starttls.required" value="true" />
+			</email:properties>
+		</email:smtp-connection>
+	</email:smtp-config>
+	<flow name="worldFlow" doc:id="5c88b266-b6ca-4a20-a793-904016ee229d" >
+		<http:listener doc:name="Listener" doc:id="b6eb541c-84e3-4fe6-80cc-bacf7689a769" config-ref="HTTP_Listener_config" path="/world">
+		</http:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="9781b769-1ad7-4316-b4a1-f0a10f09edc4" message="start"/>
+		<http:request method="GET" doc:name="Request" doc:id="bbd02f9e-1bec-4a45-b938-b58eb3bb21a4" url="https://reqres.in/api/users?page=2"/>
+		<set-payload value="#[payload]" doc:name="Set Payload" doc:id="fd9a6ee3-272b-4c55-bd8b-064fa6d02ea1" />
+		<ee:transform doc:name="Transform Message" doc:id="e779ae46-41f9-4dae-b59b-c9b82f53daa7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"ID": payload.data[0]
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-payload value="#[payload]" doc:name="Set Payload" doc:id="75edf300-23f1-4b7f-a7a6-029be23a965c" />
+		<email:send doc:name="Send" doc:id="067c1bab-b4c7-4cfc-8403-55edb35b7cec" config-ref="Email_SMTP" fromAddress="rajasekhar7739@gmail.com" subject="Data from external api">
+			<email:to-addresses >
+				<email:to-address value="rajasekharvemulakonda181@gmail.com" />
+			</email:to-addresses>
+			<email:body contentType="application/json" />
+		</email:send>
+		<logger level="INFO" doc:name="Logger" doc:id="26cb5afb-9999-4177-8ecf-fb315e952ec6" message="end"/>
+	</flow>
+</mule>
